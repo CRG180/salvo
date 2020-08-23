@@ -1,0 +1,3 @@
+﻿sea_based_force,land_based_force,sea_based_staying,sea_based_defense,sea_based_readiness,sea_based_direct_fire,land_based_direct_fire,sea_based_targeting,land_based_targeting,sea_based_deception,first_salvo
+4,6,1,2,0.5,2,4,0.5,0.5,0.5,sea
+4,6,1,2,0.5,2,4,0.5,0.5,0.5,land

@@ -1,0 +1,3 @@
+"","sea_based_force","land_based_force","sea_based_staying","sea_based_defense","sea_based_readiness","sea_based_direct_fire","land_based_direct_fire","sea_based_targeting","land_based_targeting","sea_based_deception","first_salvo","outcome_land_based_force","outcome_sea_based_force","FER","FER_first_salvo","iter"
+"1",4,6,1,2,0.5,2,4,0.5,0.5,0.5,"sea","-3","9","-4.5","3.75","2"
+"2",4,6,1,2,0.5,2,4,0.5,0.5,0.5,"land","6","-0.75","-0.1875","0.75","3"

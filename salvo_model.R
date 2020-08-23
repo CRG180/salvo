@@ -14,21 +14,21 @@ us_platform <- in_data$us_offense[i]
 china_staying<- in_data$china_staying_power[i]
 us_staying<-in_data$us_staying_power[i]
 
-# Defense stregnth in num missiles/platform
+# Defense strength in num missiles/platform
 china_defense <- in_data$china_defense[i]
 us_defense <-in_data$us_defense[i]
 
-# offense stregnth in num missiles/platform
+# offense strength in num missiles/platform
 china_offense <- in_data$china_offense[i]
 us_offense <-in_data$us_offense[i]
 
 first_salvo <- in_data$first_salvo[i]
 
-# Scouting ablility 
+# Scouting ability 
 china_scouting<-in_data$china_scouting[i]
 us_scouting <-in_data$us_scouting[i]
 
-# readiness ablility 
+# readiness ability 
 china_ready<-in_data$china_ready[i]
 us_ready <-in_data$us_ready[i]
 
@@ -75,3 +75,5 @@ in_data$outcome_us[i]<-us_platform
 in_data$iter[i] <- iter
 
 } # end for loop 
+
+write.csv(in_data,"salvo_output.csv")
