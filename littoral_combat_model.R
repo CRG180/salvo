@@ -66,7 +66,7 @@ for(i in 1:nrow(in_data)){
       delta_sea <- ((land_based_targeting*sea_based_deception*land_based_direct_fire*land_based_force)-
                       (sea_based_readiness*sea_based_defense*sea_based_force))/sea_based_direct_fire
       sea_based_force <- sea_based_force-delta_sea
-      if(iter == 1){
+      if(iter == 1){ # don't think that works correct not even sure the purpose of FER does not account for salva
         in_data$FER_first_salvo[i]<-(sea_based_force/in_data$sea_based_force[i])/(land_based_force/in_data$land_based_force[i])
       }
       
