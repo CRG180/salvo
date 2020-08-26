@@ -1,4 +1,53 @@
-in_data<-read.csv("data_inputs.csv")
+---
+title: "salvo"
+author: "Charles Gallagher"
+date: "8/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### First set up our DOE. I did this by editing the txt file parameters.txt directly. Note the model will not run if there are value of zero.
+
+```{r}
+para <- names(read.csv("data_inputs.csv"))
+parameters <-read.table("parameters.txt")
+rownames(parameters)<- para
+colnames(parameters)<- c("low", "high", "decimal")
+parameters
+
+```
+
+### Once you're cool with that then create a stacked NOLH. 
+
+```{bash engine.opts='-l', echo = F, warning =F, message = F}
+stack_nolhs.rb -s 100 -l 512 parameters.txt  > salvo_NOLH.csv
+```
+
+### Next due some datacleaning before putting it into our salvo model. We need col names and make the first salvo be us or china. Then we need to write the file to a csv
+
+```{r message=FALSE}
+library(tidyverse)
+nolh <- read_table2("salvo_NOLH.csv", 
+    col_names = FALSE)
+dim(nolh)
+names(nolh)<- para
+nolh<-nolh %>% 
+  mutate(first_salvo = ifelse(first_salvo==0, "china","us"))
+head(nolh)
+
+write.csv(nolh, "salvo_NOLH.csv")
+```
+
+### Ok now run the simulation. This took about 2 mins on my computer at the end it creates csv. Do anaylsis in R or JMP> 
+
+```{r}
+in_data<-read_csv("salvo_NOLH.csv") %>% 
+  select(-X1)
+head(in_data)
+
 in_data$outcome_china<-rep("NA",nrow(in_data))
 in_data$outcome_us<-rep("NA",nrow(in_data))
 in_data$iter <- rep("NA",nrow(in_data))
@@ -78,4 +127,15 @@ in_data$iter[i] <- iter
 
 } # end for loop 
 
+in_data
+
 write.csv(in_data,"salvo_output.csv")
+```
+
+```{r}
+in_data <- in_data %>% 
+  mutate(us_wins = outcome_us > 0)
+ggplot(in_data,aes(x=us_wins))+
+  geom_bar()
+```
+
