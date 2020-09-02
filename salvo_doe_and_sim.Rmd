@@ -30,6 +30,9 @@ stack_nolhs.rb -s 100 -l 512 parameters.txt  > salvo_NOLH.csv
 
 ```{r message=FALSE}
 library(tidyverse)
+library(gridExtra)
+library(grid)
+
 nolh <- read_table2("salvo_NOLH.csv", 
     col_names = FALSE)
 dim(nolh)
@@ -137,5 +140,116 @@ in_data <- in_data %>%
   mutate(us_wins = outcome_us > 0)
 ggplot(in_data,aes(x=us_wins))+
   geom_bar()
+```
+
+```{r}
+names(model_data)
+```
+
+
+```{r}
+
+model_data <-in_data %>% select(us_wins, 1:13)
+Logit <- glm(formula = us_wins ~ .,
+               family  = binomial(link = "logit"),
+               data    = model_data)
+summary(Logit)
+
+
+
+
+```
+
+```{r}
+library(tidymodels)
+library(kableExtra)
+model_data <- model_data %>% mutate(us_wins =factor(us_wins))
+
+d<-initial_split(model_data,prop = .99)
+t<- training(d)
+
+
+CART_recipe <-
+  recipe(us_wins ~., data = model_data) %>%
+ # step_normalize(all_numeric()) %>% 
+  themis::step_downsample(us_wins ) %>% 
+  prep()
+
+
+############################ fit Models     #########################
+CART_spec <- decision_tree() %>% 
+  set_engine("rpart") %>% 
+  set_mode("classification") %>% 
+  translate()
+
+CART_work_flow <- workflow() %>% 
+  add_recipe(CART_recipe) %>% 
+  add_model(CART_spec)
+
+fit_CART <-fit(CART_work_flow ,model_data)
+fit_CART
+
+ finial_test_fit_CART <-CART_work_flow%>%
+   last_fit(d) 
+
+
+metric_CART<-finial_test_fit_CART%>%
+   collect_metrics() 
+ metric_CART %>% kable()
+library(rpart.plot)
+fan_tree <-rpart.plot(fit_CART$fit$fit$fit,main = "Decision Tree Predicting USMC Victory",caption = "AUC: .85")
+
+
+
+```
+
+
+
+
+
+
+```{r}
+ggplot(data=in_data, aes(x=us_platform,y=china_platform, fill=us_wins, color= china_scouting))+
+  geom_jitter()
+
+ggplot(data= in_data, aes(x=china_scouting, y= china_platform, color = us_wins ))+
+  geom_jitter()+
+  labs(title = "How the USMC ASM Battalion is Defeated ")+
+       xlab("Chinese Scouting Capablity")+
+       ylab("Number of Chinese DDGs" )+
+       guides(color=guide_legend(title="USMC Victory"))#chineese fdsafd s
+
+ggplot(data= in_data, aes(x=china_scouting, y=outcome_us, color = us_wins ))+
+  geom_jitter()
+
+a<-in_data %>% 
+  filter(first_salvo =='us') %>% 
+ggplot(aes(x=china_scouting, y= us_staying, color = us_wins ))+
+  geom_jitter()+
+  labs(title ="First Salvo US")
+
+b<-in_data %>% 
+  filter(first_salvo =='china') %>% 
+ggplot(aes(x=china_scouting, y= china_platform, color = us_wins ))+
+  geom_jitter()+
+  labs(title = "First Salvo China")
+
+grid.arrange(a,b)
+
+in_data %>% 
+  #filter(first_salvo =='china') %>% 
+  filter(us_wins == "TRUE") %>% 
+ggplot(aes(x=china_scouting))+
+  geom_histogram(color="black")+
+  labs(title = "Cases When United States Wins with China Scouting")
+
+library(GGally)
+
+ggpairs(in_data %>% select(1:6, us_wins),
+        mapping = ggplot2::aes(color = us_wins))
+
+```
+```{r}
+ggpl
 ```
 
