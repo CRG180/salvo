@@ -12,11 +12,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ### First set up our DOE. I did this by editing the txt file parameters.txt directly. Note the model will not run if there are value of zero.
 
 ```{r}
+library(kableExtra)
 para <- names(read.csv("data_inputs.csv"))
 parameters <-read.table("parameters.txt")
 rownames(parameters)<- para
 colnames(parameters)<- c("low", "high", "decimal")
-parameters
+parameters %>% kable()
 
 ```
 
@@ -163,16 +164,30 @@ summary(Logit)
 ```{r}
 library(tidymodels)
 library(kableExtra)
-model_data <- model_data %>% mutate(us_wins =factor(us_wins))
 
-d<-initial_split(model_data,prop = .99)
+model_data2 <-model_data %>% 
+  rename(`PLA-N DDGs`= china_platform,
+        `PLA-N attrited`=us_wins,
+        `USMC HIMARS` = us_platform,
+        `PLA-N Staying`=china_staying_power,
+        `USMC Staying`=us_staying_power,
+        `PLA-N Scouting `=china_scouting,
+         `USMC Scouting` = us_scouting,
+          `USMC Readiness`=us_ready,
+        `PLA-N Readiness`=china_ready)
+names(model_data)
+
+set.seed(124)
+model_data2 <- model_data2 %>% mutate(`PLA-N attrited` =factor(`PLA-N attrited`))
+
+d<-initial_split(model_data2,prop = .99)
 t<- training(d)
 
 
 CART_recipe <-
-  recipe(us_wins ~., data = model_data) %>%
+  recipe(`PLA-N attrited` ~., data = model_data2) %>%
  # step_normalize(all_numeric()) %>% 
-  themis::step_downsample(us_wins ) %>% 
+  themis::step_downsample(`PLA-N attrited`) %>% 
   prep()
 
 
@@ -186,7 +201,7 @@ CART_work_flow <- workflow() %>%
   add_recipe(CART_recipe) %>% 
   add_model(CART_spec)
 
-fit_CART <-fit(CART_work_flow ,model_data)
+fit_CART <-fit(CART_work_flow ,model_data2)
 fit_CART
 
  finial_test_fit_CART <-CART_work_flow%>%
@@ -197,8 +212,11 @@ metric_CART<-finial_test_fit_CART%>%
    collect_metrics() 
  metric_CART %>% kable()
 library(rpart.plot)
-fan_tree <-rpart.plot(fit_CART$fit$fit$fit,main = "Decision Tree Predicting USMC Victory",caption = "AUC: .85")
+library(rattle)
 
+#fancyRpartPlot(fit_CART$fit$fit$fit,main = "Decision Tree Predicting USMC Victory",box.palette = "RdBu")
+
+rpart.plot(fit_CART$fit$fit$fit,main = "Decision Tree Predicting PLA-N Attrited", box.palette = "RdBu")
 
 
 ```
@@ -214,10 +232,24 @@ ggplot(data=in_data, aes(x=us_platform,y=china_platform, fill=us_wins, color= ch
 
 ggplot(data= in_data, aes(x=china_scouting, y= china_platform, color = us_wins ))+
   geom_jitter()+
-  labs(title = "How the USMC ASM Battalion is Defeated ")+
+  labs(title = "How the PLA-N Fleet is Defeated ", subtitle = "Based on Number of Chinese DDGs and their Scouting Capablity")+
        xlab("Chinese Scouting Capablity")+
        ylab("Number of Chinese DDGs" )+
-       guides(color=guide_legend(title="USMC Victory"))#chineese fdsafd s
+       guides(color=guide_legend(title="PLA-N Attrited"))+
+       theme_bw()#
+
+
+ggplot(data= in_data, aes(x=us_ready, y= china_platform, color = us_wins ))+
+  geom_jitter()+
+  labs(title = "How the PLA-N Fleet is Defeated ",
+       subtitle = "Based on Number of Chinese DDGs and USMC Readiness")+
+       xlab("USMC Readiness")+
+       ylab("Number of Chinese DDGs" )+
+       guides(color=guide_legend(title="PLA-N Attrited"))+
+       theme_bw()
+
+
+
 
 ggplot(data= in_data, aes(x=china_scouting, y=outcome_us, color = us_wins ))+
   geom_jitter()
@@ -250,6 +282,13 @@ ggpairs(in_data %>% select(1:6, us_wins),
 
 ```
 ```{r}
-ggpl
+library(httr)
+path <- ("https://api.aviationstack.com/v1/flights?access_key = b41a20de12a5f7d8ca229546b2ce6b1b&flight_date = 2019-12-11")
+
+request <- GET(url = path)
+response <- content(request, as = "text", encoding = "UTF-8")
+response
+df <- fromJSON(response, flatten = TRUE) %>% 
+  data.frame()
 ```
 
